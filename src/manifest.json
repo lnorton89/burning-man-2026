@@ -634,6 +634,16 @@
     "location": "near Robot Heart"
   },
   {
+    "id": "IMG_20260907_092224",
+    "type": "photo",
+    "date": "2026-09-01T07:02:58",
+    "thumb": "media/thumb/IMG_20260907_092224.jpg",
+    "full": "media/full/IMG_20260907_092224.jpg",
+    "width": 2200,
+    "height": 1650,
+    "location": "near Robot Heart"
+  },
+  {
     "id": "20260901_222750",
     "type": "video",
     "date": "2026-09-01T22:27:50",
@@ -1662,15 +1672,5 @@
     "height": 1080,
     "duration": 67.9599,
     "location": "near Camp MindShark"
-  },
-  {
-    "id": "IMG_20260907_092224",
-    "type": "photo",
-    "date": "2026-09-07T09:22:24",
-    "thumb": "media/thumb/IMG_20260907_092224.jpg",
-    "full": "media/full/IMG_20260907_092224.jpg",
-    "width": 2200,
-    "height": 1650,
-    "location": "near Robot Heart"
   }
 ]
