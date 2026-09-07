@@ -227,7 +227,7 @@
     "full": "media/full/20260826_180724.jpg",
     "width": 1650,
     "height": 2200,
-    "location": "near 6:15 & 9050'"
+    "location": "near Gate Actual"
   },
   {
     "id": "20260826_195657",
@@ -357,7 +357,8 @@
     "thumb": "media/thumb/20260829_235659.jpg",
     "full": "media/full/20260829_235659.jpg",
     "width": 2200,
-    "height": 1650
+    "height": 1650,
+    "location": "roughly near Camp The Sound Garden"
   },
   {
     "id": "20260830_194942",
@@ -367,7 +368,7 @@
     "full": "media/full/20260830_194942.jpg",
     "width": 1650,
     "height": 2200,
-    "location": "near \"A Path thru (to Now)\""
+    "location": "near The Man"
   },
   {
     "id": "20260830_195433",
@@ -377,7 +378,7 @@
     "full": "media/full/20260830_195433.jpg",
     "width": 1650,
     "height": 2200,
-    "location": "near \"I am the Light. I remember\""
+    "location": "near The Man"
   },
   {
     "id": "20260831_164533",
@@ -641,7 +642,7 @@
     "width": 1920,
     "height": 1080,
     "duration": 28.768422,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260901_223625",
@@ -651,7 +652,7 @@
     "full": "media/full/20260901_223625.jpg",
     "width": 2200,
     "height": 1650,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260901_223629",
@@ -662,7 +663,7 @@
     "width": 1920,
     "height": 1080,
     "duration": 14.976,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260902_022857",
@@ -828,7 +829,7 @@
     "width": 1920,
     "height": 1080,
     "duration": 32.2152,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260902_234742",
@@ -839,7 +840,7 @@
     "width": 1920,
     "height": 1080,
     "duration": 62.377688,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260903_001143",
@@ -849,7 +850,8 @@
     "video": "media/video/20260903_001143.mp4",
     "width": 1920,
     "height": 1080,
-    "duration": 75.920589
+    "duration": 75.920589,
+    "location": "roughly near Camp Questionmark"
   },
   {
     "id": "20260903_001525",
@@ -859,7 +861,7 @@
     "full": "media/full/20260903_001525.jpg",
     "width": 2200,
     "height": 1650,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260903_001535",
@@ -869,7 +871,7 @@
     "full": "media/full/20260903_001535.jpg",
     "width": 2200,
     "height": 1650,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260903_001548",
@@ -879,7 +881,7 @@
     "full": "media/full/20260903_001548.jpg",
     "width": 2200,
     "height": 1650,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260903_004134",
@@ -911,7 +913,7 @@
     "width": 1920,
     "height": 1080,
     "duration": 25.378067,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260903_025942",
@@ -922,7 +924,7 @@
     "width": 1920,
     "height": 1080,
     "duration": 127.432067,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260903_033941",
@@ -1074,7 +1076,8 @@
     "thumb": "media/thumb/20260903_235031.jpg",
     "full": "media/full/20260903_235031.jpg",
     "width": 2200,
-    "height": 1650
+    "height": 1650,
+    "location": "roughly near \"Light Grinder\""
   },
   {
     "id": "20260903_235043",
@@ -1084,7 +1087,8 @@
     "video": "media/video/20260903_235043.mp4",
     "width": 1920,
     "height": 1080,
-    "duration": 14.418122
+    "duration": 14.418122,
+    "location": "roughly near \"Light Grinder\""
   },
   {
     "id": "20260903_235253",
@@ -1126,7 +1130,7 @@
     "width": 1920,
     "height": 1080,
     "duration": 35.545589,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260904_031347",
@@ -1137,7 +1141,7 @@
     "width": 1080,
     "height": 1920,
     "duration": 150.6975,
-    "location": "near Camp Camp Questionmark"
+    "location": "near Camp Questionmark"
   },
   {
     "id": "20260904_054817",
@@ -1657,6 +1661,6 @@
     "width": 1920,
     "height": 1080,
     "duration": 67.9599,
-    "location": "near Camp I Love Elephants"
+    "location": "near 300 Portal"
   }
 ]

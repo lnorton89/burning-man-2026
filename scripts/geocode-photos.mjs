@@ -17,7 +17,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import exifr from "exifr";
 import { geocode, reverseGeocode } from "./brc/geocode.ts";
-import { bearingBetween, distanceBetween, metersToFeet } from "./brc/geo.ts";
+import { bearingBetween, distanceBetween, metersToFeet, polarToPosition } from "./brc/geo.ts";
 
 const run = promisify(execFile);
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -38,6 +38,46 @@ async function loadLayout() {
 
 async function loadListings(layout) {
   const listings = [];
+
+  // Fixed civic landmarks - The Man and Center Camp Plaza - aren't in the
+  // art/camp listings at all (they're the survey's own reference points,
+  // not something anyone applied for a placement of), so without these a
+  // photo taken right at the Man's base would silently fall through to
+  // whatever registered art happens to be nearby instead.
+  // GPS is typically only accurate to within 10-30ft, so a shot taken at the
+  // base of the Man can easily land nominally closer to some small
+  // installation a few dozen feet away than to the Man's own exact centre
+  // point. "Near the Man" is the far more recognizable and almost-certainly-
+  // still-correct answer, so give these two core landmarks a tie-breaking
+  // edge over anything within ordinary GPS noise of them.
+  const LANDMARK_PRIORITY_FEET = 60;
+  listings.push({
+    name: "The Man",
+    kind: "landmark",
+    position: layout.center.geometry.coordinates,
+    priorityBias: LANDMARK_PRIORITY_FEET,
+  });
+  if (layout.center_camp) {
+    listings.push({
+      name: "Center Camp Plaza",
+      kind: "landmark",
+      position: polarToPosition(layout, "6:00", layout.center_camp.distance),
+      priorityBias: LANDMARK_PRIORITY_FEET,
+    });
+  }
+
+  try {
+    const landmarks = JSON.parse(await fs.readFile(path.join(DATA_DIR, "cpns.geojson"), "utf8"));
+    for (const feature of landmarks.features ?? []) {
+      const name = feature.properties?.NAME ?? feature.properties?.name;
+      const [lon, lat] = feature.geometry?.coordinates ?? [];
+      if (name && typeof lat === "number" && typeof lon === "number") {
+        listings.push({ name, kind: "landmark", position: [lon, lat] });
+      }
+    }
+  } catch (e) {
+    console.warn(`  · no landmark points (${e.message})`);
+  }
 
   try {
     const art = JSON.parse(await fs.readFile(path.join(DATA_DIR, "art.json"), "utf8"));
@@ -69,9 +109,12 @@ async function loadListings(layout) {
 function nearestListing(position, listings) {
   let best;
   let bestFeet = Infinity;
+  let bestRanked = Infinity;
   for (const listing of listings) {
     const feet = metersToFeet(distanceBetween(position, listing.position));
-    if (feet < bestFeet) {
+    const ranked = feet - (listing.priorityBias ?? 0);
+    if (ranked < bestRanked) {
+      bestRanked = ranked;
       bestFeet = feet;
       best = listing;
     }
@@ -90,7 +133,13 @@ function describe(position, layout, listings) {
   if (distanceFeet <= layout.fence_distance * 1.15) {
     const nearest = nearestListing(position, listings);
     if (nearest) {
-      return nearest.kind === "camp" ? `near Camp ${nearest.name}` : `near "${nearest.name}"`;
+      if (nearest.kind === "landmark") return `near ${nearest.name}`;
+      if (nearest.kind === "camp") {
+        // Plenty of camp names already lead with "Camp" ("Camp Pendant"),
+        // and some don't ("Snuggles") - don't stack a second one on top.
+        return /^camp\b/i.test(nearest.name) ? `near ${nearest.name}` : `near Camp ${nearest.name}`;
+      }
+      return `near "${nearest.name}"`;
     }
     const address = reverseGeocode(position, layout);
     return `near ${address.label}`;
@@ -128,6 +177,44 @@ async function videoGps(filePath) {
   return [Number(lon), Number(lat)];
 }
 
+// How close in time a GPS-less shot has to be to a fixed one to borrow its
+// location. Long enough to cover "phone hadn't locked on yet this trip",
+// short enough that borrowing it isn't just a guess - people don't usually
+// relocate across the city in under two hours of continuous shooting.
+const INTERPOLATE_MAX_MINUTES = 120;
+
+/** Fills in items with no GPS fix from the nearest-in-time item that has one. */
+function interpolateMissing(manifest) {
+  const withPosition = manifest
+    .map((item, index) => ({ item, index, time: item.date ? new Date(item.date).getTime() : undefined }))
+    .filter((entry) => entry.time !== undefined && entry.item.location);
+
+  let interpolated = 0;
+  for (const item of manifest) {
+    if (item.location || !item.date) continue;
+    const time = new Date(item.date).getTime();
+
+    let nearest;
+    let bestDiff = Infinity;
+    for (const candidate of withPosition) {
+      const diff = Math.abs(candidate.time - time);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        nearest = candidate;
+      }
+    }
+
+    if (nearest && bestDiff <= INTERPOLATE_MAX_MINUTES * 60 * 1000) {
+      // The neighbour's own text already starts with "near" (or is the
+      // off-playa "N mi ... of Black Rock City" form) - splice "roughly"
+      // in after that lead-in rather than stacking a second one in front.
+      item.location = nearest.item.location.replace(/^near /, "roughly near ");
+      interpolated++;
+    }
+  }
+  return interpolated;
+}
+
 async function main() {
   const layout = await loadLayout();
   const listings = await loadListings(layout);
@@ -150,8 +237,10 @@ async function main() {
     }
   }
 
+  const interpolated = interpolateMissing(manifest);
+
   await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
-  console.log(`Wrote a location for ${found}/${manifest.length} items`);
+  console.log(`Wrote a location for ${found}/${manifest.length} items (+${interpolated} interpolated from nearby timestamps)`);
 }
 
 main().catch((err) => {
