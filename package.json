@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/generate-og-pages.mjs",
     "preview": "vite preview",
     "process-media": "node scripts/process-media.mjs",
-    "postprocess-media": "node scripts/generate-og.mjs",
-    "generate-og": "node scripts/generate-og.mjs"
+    "postprocess-media": "node scripts/generate-og-images.mjs",
+    "generate-og-images": "node scripts/generate-og-images.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

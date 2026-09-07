@@ -19,8 +19,7 @@ export default function Lightbox({ items, index, onClose, onNavigate }: Lightbox
 
   async function copyLink() {
     try {
-      const shareUrl = `${window.location.origin}${import.meta.env.BASE_URL}p/${item.id}/`;
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

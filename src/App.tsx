@@ -5,9 +5,18 @@ import Lightbox from "./Lightbox";
 
 const items = manifest as unknown as MediaItem[];
 
-function idFromHash(): string | null {
-  const raw = window.location.hash.slice(1);
-  return raw ? decodeURIComponent(raw) : null;
+const BASE_PATH = import.meta.env.BASE_URL; // e.g. "/burning-man-2026/"
+
+function idFromPath(): string | null {
+  const path = window.location.pathname;
+  if (!path.startsWith(BASE_PATH)) return null;
+  const rest = path.slice(BASE_PATH.length); // e.g. "p/20260826_091323/"
+  const match = rest.match(/^p\/([^/]+)\/?$/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function pathForId(id: string): string {
+  return `${BASE_PATH}p/${id}/`;
 }
 
 function indexForId(id: string | null): number | null {
@@ -34,11 +43,11 @@ function formatDayHeading(key: string): string {
 }
 
 export default function App() {
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(() => indexForId(idFromHash()));
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(() => indexForId(idFromPath()));
 
   useEffect(() => {
     function onPopState() {
-      setLightboxIndex(indexForId(idFromHash()));
+      setLightboxIndex(indexForId(idFromPath()));
     }
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -46,17 +55,17 @@ export default function App() {
 
   function openLightbox(index: number) {
     setLightboxIndex(index);
-    history.pushState({ lightbox: true }, "", `#${items[index].id}`);
+    history.pushState({ lightbox: true }, "", pathForId(items[index].id));
   }
 
   function navigateLightbox(index: number) {
     setLightboxIndex(index);
-    history.replaceState({ lightbox: true }, "", `#${items[index].id}`);
+    history.replaceState({ lightbox: true }, "", pathForId(items[index].id));
   }
 
   function closeLightbox() {
     setLightboxIndex(null);
-    history.replaceState(null, "", window.location.pathname + window.location.search);
+    history.replaceState(null, "", BASE_PATH);
   }
 
   const groups = useMemo(() => {
