@@ -6,6 +6,7 @@ export interface PhotoItem {
   full: string;
   width: number;
   height: number;
+  location?: string;
 }
 
 export interface VideoItem {
@@ -17,6 +18,7 @@ export interface VideoItem {
   width: number;
   height: number;
   duration: number;
+  location?: string;
 }
 
 export type MediaItem = PhotoItem | VideoItem;

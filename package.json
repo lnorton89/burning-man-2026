@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "process-media": "node scripts/process-media.mjs",
     "postprocess-media": "node scripts/generate-og-images.mjs",
-    "generate-og-images": "node scripts/generate-og-images.mjs"
+    "generate-og-images": "node scripts/generate-og-images.mjs",
+    "geocode-photos": "node --experimental-strip-types scripts/geocode-photos.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -19,6 +20,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "exifr": "^7.1.3",
     "sharp": "^0.33.5",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"

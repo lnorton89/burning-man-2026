@@ -56,10 +56,11 @@ async function main() {
   for (const item of manifest) {
     i += 1;
     const dateLabel = formatDateLabel(item.date);
+    const locationSuffix = item.location ? `, ${item.location}` : "";
     const html = template.replace(
       ogRegex,
       ogBlock({
-        description: `A ${item.type} from my Burn — ${dateLabel || "2026"}.`,
+        description: `A ${item.type} from my Burn — ${dateLabel || "2026"}${locationSuffix}.`,
         image: `${BASE_URL}og/${item.id}.jpg`,
         url: `${BASE_URL}p/${item.id}/`,
       }),

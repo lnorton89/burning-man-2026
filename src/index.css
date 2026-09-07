@@ -221,4 +221,9 @@ body {
   transform: translateX(-50%);
   color: var(--muted);
   font-size: 0.85rem;
+  text-align: center;
+}
+
+.lightbox-location {
+  color: var(--accent);
 }

@@ -4,3 +4,12 @@ dist
 *.log
 .DS_Store
 *.tsbuildinfo
+
+# Burning Man's own published survey + listings, fetched locally for
+# geocoding photos - subject to BM's dataset terms, not ours to redistribute.
+# See scripts/brc-data/README.md.
+/scripts/brc-data/*/layout.json
+/scripts/brc-data/*/art.json
+/scripts/brc-data/*/camp.json
+/scripts/brc-data/*/event.json
+/scripts/brc-data/*/*.geojson

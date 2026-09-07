@@ -90,6 +90,7 @@ export default function Lightbox({ items, index, onClose, onNavigate }: Lightbox
 
       <div className="lightbox-counter">
         {index + 1} / {items.length}
+        {item.location && <span className="lightbox-location"> &middot; {item.location}</span>}
       </div>
     </div>
   );
