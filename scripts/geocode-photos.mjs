@@ -26,9 +26,13 @@ const MEDIA_DIR = path.join(ROOT, "media");
 const DATA_DIR = path.join(ROOT, "scripts", "brc-data", "2026");
 const MANIFEST_PATH = path.join(ROOT, "src", "manifest.json");
 
-// Roughly a block and a half - close enough to credit a specific camp/art
-// piece rather than just the nearest street corner.
-const NEAR_LISTING_FEET = 250;
+// Roughly a block and a half - close enough to credit a specific camp
+// (which you'd be standing inside) rather than just the nearest corner.
+// Art gets a much longer leash: installations, and especially anything
+// being ceremonially burned, are meant to be viewed from well back - a
+// burn night crowd can be 400-600ft from the piece itself, behind a
+// safety perimeter, and still unambiguously be "at" it.
+const NEAR_LISTING_FEET = { camp: 250, art: 600, landmark: 250 };
 
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
 const compassDirection = (bearingDeg) => COMPASS[Math.round(bearingDeg / 22.5) % 16];
@@ -118,6 +122,20 @@ async function loadListings(layout) {
     });
   }
 
+  // Known spots that aren't in Burning Man's own listings at all - mutant
+  // vehicles and roaming sound camps don't apply for a placed address, so
+  // something like Robot Heart has no official record to geocode from.
+  // scripts/brc-data/custom-landmarks.json is a hand-maintained list of
+  // {name, lat, lon}, sourced from a photo with real GPS taken there.
+  try {
+    const custom = JSON.parse(await fs.readFile(path.join(ROOT, "scripts", "brc-data", "custom-landmarks.json"), "utf8"));
+    for (const c of custom) {
+      listings.push({ name: c.name, kind: "landmark", position: [c.lon, c.lat], priorityBias: LANDMARK_PRIORITY_FEET });
+    }
+  } catch (e) {
+    console.warn(`  · no custom landmarks (${e.message})`);
+  }
+
   try {
     const landmarks = JSON.parse(await fs.readFile(path.join(DATA_DIR, "cpns.geojson"), "utf8"));
     for (const feature of landmarks.features ?? []) {
@@ -164,6 +182,8 @@ function nearestListing(position, listings) {
   let bestRanked = Infinity;
   for (const listing of listings) {
     const feet = metersToFeet(distanceBetween(position, listing.position));
+    const limit = NEAR_LISTING_FEET[listing.kind] ?? NEAR_LISTING_FEET.camp;
+    if (feet > limit) continue;
     const ranked = feet - (listing.priorityBias ?? 0);
     if (ranked < bestRanked) {
       bestRanked = ranked;
@@ -171,7 +191,7 @@ function nearestListing(position, listings) {
       best = listing;
     }
   }
-  return best && bestFeet <= NEAR_LISTING_FEET ? { ...best, distanceFeet: bestFeet } : undefined;
+  return best ? { ...best, distanceFeet: bestFeet } : undefined;
 }
 
 function describe(position, layout, listings) {
@@ -291,8 +311,29 @@ async function main() {
 
   const interpolated = interpolateMissing(manifest);
 
+  // Hand corrections for cases the algorithm can't reach on its own - no
+  // GPS and no nearby-in-time fix to interpolate from, or ground truth
+  // ("this is actually at X") that beats what the data says. Applied last
+  // so it always wins, and re-running this script never clobbers it.
+  let overridden = 0;
+  try {
+    const overrides = JSON.parse(
+      await fs.readFile(path.join(ROOT, "scripts", "brc-data", "location-overrides.json"), "utf8"),
+    );
+    for (const item of manifest) {
+      if (overrides[item.id]) {
+        item.location = overrides[item.id];
+        overridden++;
+      }
+    }
+  } catch (e) {
+    console.warn(`  · no location overrides (${e.message})`);
+  }
+
   await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
-  console.log(`Wrote a location for ${found}/${manifest.length} items (+${interpolated} interpolated from nearby timestamps)`);
+  console.log(
+    `Wrote a location for ${found}/${manifest.length} items (+${interpolated} interpolated, +${overridden} manually overridden)`,
+  );
 }
 
 main().catch((err) => {
