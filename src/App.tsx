@@ -102,6 +102,7 @@ export default function App() {
                   className="tile"
                   style={{ aspectRatio: `${item.width} / ${item.height}` }}
                   onClick={() => openLightbox(globalIndex)}
+                  aria-label={`${item.type === "video" ? "Video" : "Photo"} from ${formatDayHeading(key)}${item.location ? `, ${item.location}` : ""}`}
                 >
                   <img
                     src={import.meta.env.BASE_URL + (item.type === "photo" ? item.thumb : item.poster)}
