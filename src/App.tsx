@@ -1,9 +1,20 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import manifest from "./manifest.json";
 import type { MediaItem } from "./types";
 import Lightbox from "./Lightbox";
 
 const items = manifest as unknown as MediaItem[];
+
+function idFromHash(): string | null {
+  const raw = window.location.hash.slice(1);
+  return raw ? decodeURIComponent(raw) : null;
+}
+
+function indexForId(id: string | null): number | null {
+  if (!id) return null;
+  const idx = items.findIndex((item) => item.id === id);
+  return idx === -1 ? null : idx;
+}
 
 function formatDuration(seconds: number): string {
   const total = Math.round(seconds);
@@ -23,7 +34,30 @@ function formatDayHeading(key: string): string {
 }
 
 export default function App() {
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(() => indexForId(idFromHash()));
+
+  useEffect(() => {
+    function onPopState() {
+      setLightboxIndex(indexForId(idFromHash()));
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  function openLightbox(index: number) {
+    setLightboxIndex(index);
+    history.pushState({ lightbox: true }, "", `#${items[index].id}`);
+  }
+
+  function navigateLightbox(index: number) {
+    setLightboxIndex(index);
+    history.replaceState({ lightbox: true }, "", `#${items[index].id}`);
+  }
+
+  function closeLightbox() {
+    setLightboxIndex(null);
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
 
   const groups = useMemo(() => {
     const map = new Map<string, MediaItem[]>();
@@ -58,7 +92,7 @@ export default function App() {
                   key={item.id}
                   className="tile"
                   style={{ aspectRatio: `${item.width} / ${item.height}` }}
-                  onClick={() => setLightboxIndex(globalIndex)}
+                  onClick={() => openLightbox(globalIndex)}
                 >
                   <img
                     src={import.meta.env.BASE_URL + (item.type === "photo" ? item.thumb : item.poster)}
@@ -84,8 +118,8 @@ export default function App() {
         <Lightbox
           items={items}
           index={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onNavigate={setLightboxIndex}
+          onClose={closeLightbox}
+          onNavigate={navigateLightbox}
         />
       )}
 

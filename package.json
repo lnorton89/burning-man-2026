@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "process-media": "node scripts/process-media.mjs"
+    "process-media": "node scripts/process-media.mjs",
+    "postprocess-media": "node scripts/generate-og.mjs",
+    "generate-og": "node scripts/generate-og.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

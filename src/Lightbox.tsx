@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MediaItem } from "./types";
 
 interface LightboxProps {
@@ -11,6 +11,22 @@ interface LightboxProps {
 export default function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
   const item = items[index];
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setCopied(false);
+  }, [item]);
+
+  async function copyLink() {
+    try {
+      const shareUrl = `${window.location.origin}${import.meta.env.BASE_URL}p/${item.id}/`;
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard API unavailable (e.g. insecure context) - nothing more we can do
+    }
+  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -32,6 +48,15 @@ export default function Lightbox({ items, index, onClose, onNavigate }: Lightbox
     <div className="lightbox-backdrop" onClick={onClose}>
       <button className="lightbox-close" onClick={onClose} aria-label="Close">
         &times;
+      </button>
+      <button
+        className="lightbox-copy"
+        onClick={(e) => {
+          e.stopPropagation();
+          copyLink();
+        }}
+      >
+        {copied ? "Copied!" : "Copy link"}
       </button>
       <button
         className="lightbox-nav lightbox-prev"
