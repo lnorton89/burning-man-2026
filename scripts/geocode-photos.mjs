@@ -17,7 +17,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import exifr from "exifr";
 import { geocode, reverseGeocode } from "./brc/geocode.ts";
-import { bearingBetween, distanceBetween, metersToFeet, polarToPosition } from "./brc/geo.ts";
+import { bearingBetween, clockToMinutes, distanceBetween, metersToFeet, polarToPosition } from "./brc/geo.ts";
+import { parseClockFacing, parseFacing, SETBACK_FEET } from "./brc/frontage.ts";
 
 const run = promisify(execFile);
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -31,6 +32,57 @@ const NEAR_LISTING_FEET = 250;
 
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
 const compassDirection = (bearingDeg) => COMPASS[Math.round(bearingDeg / 22.5) % 16];
+
+/**
+ * Where a camp actually is, not just the street corner its address names.
+ *
+ * A camp's location_string is an intersection - "Esplanade & 10:00" - but
+ * the camp itself is a whole plot behind that corner, and BRC's biggest
+ * sound camps run 250-650ft deep. Left at the bare corner, a giant camp's
+ * "position" can be hundreds of feet from where anyone taking a photo
+ * inside it actually stands - closer, by raw distance, to a small
+ * neighboring camp's own corner than to anywhere inside the big one.
+ *
+ * This is dustcompass's own frontagePosition() (offsets off the road, onto
+ * the correct side, using the listing's "facing man/mountain" text) plus
+ * one more step it doesn't do: push another half the plot's depth further
+ * in, so the point lands near the middle of the footprint instead of its
+ * street edge. dustcompass doesn't need that for map pins at normal zoom;
+ * a "who is this GPS fix actually closest to" comparison does.
+ */
+function campFootprintCenter(layout, address, exactLocation, dimensions) {
+  const hit = geocode(address, layout);
+  if (!hit) return undefined;
+  if (hit.plaza || !hit.street || hit.distanceFeet === undefined) return hit.position;
+
+  const depthMatch = /(\d+)\s*\+?\s*x\s*(\d+)/i.exec(dimensions ?? "");
+  const halfDepth = depthMatch ? Number(depthMatch[2]) / 2 : 0;
+
+  let radiusFeet = hit.distanceFeet;
+  const facing = parseFacing(exactLocation);
+  if (facing) {
+    const street = layout.cStreets.find((s) => s.ref === hit.street);
+    if (street) {
+      const offset = (street.width ?? layout.road_width) / 2 + SETBACK_FEET + halfDepth;
+      radiusFeet += facing === "man" ? offset : -offset;
+    }
+  }
+
+  let minutes = clockToMinutes(hit.clock);
+  const facingClock = parseClockFacing(exactLocation);
+  if (facingClock !== undefined && radiusFeet > 0) {
+    let delta = facingClock - minutes;
+    if (delta > 360) delta -= 720;
+    if (delta < -360) delta += 720;
+    if (delta !== 0) {
+      const offset = layout.road_width / 2 + SETBACK_FEET;
+      const step = ((offset / radiusFeet) * 720) / (2 * Math.PI);
+      minutes += delta < 0 ? step : -step;
+    }
+  }
+
+  return polarToPosition(layout, minutes, radiusFeet);
+}
 
 async function loadLayout() {
   return JSON.parse(await fs.readFile(path.join(DATA_DIR, "layout.json"), "utf8"));
@@ -96,8 +148,8 @@ async function loadListings(layout) {
     const camps = JSON.parse(await fs.readFile(path.join(DATA_DIR, "camp.json"), "utf8"));
     for (const c of camps) {
       if (!c.location_string || !c.name) continue;
-      const result = geocode(c.location_string, layout);
-      if (result) listings.push({ name: c.name, kind: "camp", position: result.position });
+      const position = campFootprintCenter(layout, c.location_string, c.location?.exact_location, c.location?.dimensions);
+      if (position) listings.push({ name: c.name, kind: "camp", position });
     }
   } catch (e) {
     console.warn(`  · no camp listings (${e.message})`);

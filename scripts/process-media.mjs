@@ -21,21 +21,23 @@ const MANIFEST_PATH = path.join(ROOT, "src", "manifest.json");
 const THUMB_WIDTH = 480;
 const FULL_MAX_EDGE = 2200;
 
-function parseDateFromName(name) {
-  const m = name.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+export function parseDateFromName(name) {
+  // No anchor: most files start straight with the timestamp, but some
+  // (e.g. "IMG_20260907_092224.jpg") carry a prefix in front of it.
+  const m = name.match(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
   if (!m) return null;
   const [, y, mo, d, h, mi, s] = m;
   return `${y}-${mo}-${d}T${h}:${mi}:${s}`;
 }
 
-async function ensureDirs() {
+export async function ensureDirs() {
   for (const sub of ["full", "thumb", "video", "poster"]) {
     await fs.mkdir(path.join(OUT_DIR, sub), { recursive: true });
   }
   await fs.mkdir(path.dirname(MANIFEST_PATH), { recursive: true });
 }
 
-async function processPhoto(file, id) {
+export async function processPhoto(file, id) {
   const srcPath = path.join(SRC_DIR, file);
   const fullPath = path.join(OUT_DIR, "full", `${id}.jpg`);
   const thumbPath = path.join(OUT_DIR, "thumb", `${id}.jpg`);
@@ -82,7 +84,7 @@ async function ffprobe(file) {
   };
 }
 
-async function processVideo(file, id) {
+export async function processVideo(file, id) {
   const srcPath = path.join(SRC_DIR, file);
   const videoPath = path.join(OUT_DIR, "video", `${id}.mp4`);
   const posterPath = path.join(OUT_DIR, "poster", `${id}.jpg`);
@@ -155,7 +157,10 @@ async function main() {
   console.log(`\nWrote ${items.length} items to ${path.relative(ROOT, MANIFEST_PATH)}`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const isMain = path.resolve(process.argv[1] ?? "") === path.resolve(import.meta.dirname, "process-media.mjs");
+if (isMain) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

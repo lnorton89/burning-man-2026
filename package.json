@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build && node scripts/generate-og-pages.mjs",
     "preview": "vite preview",
     "process-media": "node scripts/process-media.mjs",
+    "add-media": "node scripts/add-media.mjs",
     "postprocess-media": "node scripts/generate-og-images.mjs",
     "generate-og-images": "node scripts/generate-og-images.mjs",
     "geocode-photos": "node --experimental-strip-types scripts/geocode-photos.mjs"
